@@ -24,7 +24,10 @@ export default function RosterView({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex">
-      <div className="bg-card w-full max-w-lg mx-auto min-h-screen p-6 overflow-y-auto">
+      <div
+        className="bg-card w-full max-w-lg mx-auto min-h-screen p-6 overflow-y-auto"
+        style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.5rem)" }}
+      >
         <div className="flex items-center justify-between mb-1.5">
           <p className="font-serif text-xl text-ink">Who's Signed In</p>
           <button onClick={onClose} className="text-inkfaint">

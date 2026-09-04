@@ -77,7 +77,7 @@ export default function HelpView({ onClose }) {
 
         <div className="space-y-2">
           {FAQS.map((f) => (
-            <FaqItem key={f.q} q={f.q} a={f.a} />
+            <FaqItem key={f.q} q={f.q} a={f.a} sections={f.sections} note={f.note} />
           ))}
         </div>
       </div>

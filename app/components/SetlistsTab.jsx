@@ -45,13 +45,8 @@ export default function SetlistsTab({ isLeader, requestPin }) {
     load();
   };
 
-  const openAdd = () => {
-    const start = () => setShowForm(true);
-    isLeader ? start() : requestPin(start);
-  };
   const openEdit = (setlist) => {
-    const start = () => setEditing(setlist);
-    isLeader ? start() : requestPin(start);
+    setEditing(setlist);
   };
 
   if (setlists === null) return null;
@@ -60,9 +55,11 @@ export default function SetlistsTab({ isLeader, requestPin }) {
     <div className="px-5 pt-4 pb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-serif text-xl text-ink">Setlists</h2>
-        <button onClick={openAdd} className="sp-btn-pill">
-          <Plus size={14} /> Add
-        </button>
+        {isLeader && (
+          <button onClick={() => setShowForm(true)} className="sp-btn-pill">
+            <Plus size={14} /> Add
+          </button>
+        )}
       </div>
 
       {showForm && (

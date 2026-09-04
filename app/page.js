@@ -144,8 +144,14 @@ export default function Home() {
           myName={myName}
           isLeader={isLeader}
           onClose={() => setSettingsOpen(false)}
-          onOpenRoster={() => setRosterOpen(true)}
-          onOpenHelp={() => setHelpOpen(true)}
+          onOpenRoster={() => {
+            setSettingsOpen(false);
+            setRosterOpen(true);
+          }}
+          onOpenHelp={() => {
+            setSettingsOpen(false);
+            setHelpOpen(true);
+          }}
           onLeaderSignOut={() => {
             setIsLeader(false);
             setSettingsOpen(false);

@@ -15,6 +15,7 @@ import {
   Check,
 } from "lucide-react";
 import { getStoredPreference, applyTheme } from "@/lib/theme";
+import { isSubscribedToPush, subscribeToPush, unsubscribeFromPush } from "@/lib/pushClient";
 import { api } from "@/lib/api";
 
 const THEME_OPTIONS = [
@@ -48,12 +49,15 @@ export default function SettingsView({
   const [pinError, setPinError] = useState("");
   const [savingPin, setSavingPin] = useState(false);
   const [notifPermission, setNotifPermission] = useState("default");
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [notifBusy, setNotifBusy] = useState(false);
   const [version, setVersion] = useState(null);
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     setTheme(getStoredPreference());
     if (typeof Notification !== "undefined") setNotifPermission(Notification.permission);
+    setPushSubscribed(isSubscribedToPush());
     if (deviceId) api.getMyInfo(deviceId).then((d) => setPersonalPin(d.personalPin));
     fetch("/version.json")
       .then((r) => r.json())
@@ -82,9 +86,25 @@ export default function SettingsView({
     }
   };
 
-  const requestNotifications = async () => {
-    const permission = await Notification.requestPermission();
-    setNotifPermission(permission);
+  const turnOnNotifications = async () => {
+    setNotifBusy(true);
+    try {
+      const result = await subscribeToPush(deviceId);
+      setNotifPermission(typeof Notification !== "undefined" ? Notification.permission : "default");
+      if (result.ok) setPushSubscribed(true);
+    } finally {
+      setNotifBusy(false);
+    }
+  };
+
+  const turnOffNotifications = async () => {
+    setNotifBusy(true);
+    try {
+      await unsubscribeFromPush(deviceId);
+      setPushSubscribed(false);
+    } finally {
+      setNotifBusy(false);
+    }
   };
 
   const signOutLeader = async () => {
@@ -187,18 +207,23 @@ export default function SettingsView({
             <div className="flex items-center gap-2">
               <Bell size={16} className="text-inkfaint" />
               <p className="text-sm text-ink">
-                {notifPermission === "granted"
-                  ? "Notifications are on"
-                  : notifPermission === "denied"
+                {notifPermission === "denied"
                   ? "Notifications are blocked"
+                  : pushSubscribed
+                  ? "Notifications are on"
                   : "Notifications are off"}
               </p>
             </div>
-            {notifPermission === "default" && (
-              <button onClick={requestNotifications} className="text-xs text-accent font-medium">
-                Turn on
-              </button>
-            )}
+            {notifPermission !== "denied" &&
+              (pushSubscribed ? (
+                <button onClick={turnOffNotifications} disabled={notifBusy} className="text-xs text-accent font-medium">
+                  {notifBusy ? "..." : "Turn off"}
+                </button>
+              ) : (
+                <button onClick={turnOnNotifications} disabled={notifBusy} className="text-xs text-accent font-medium">
+                  {notifBusy ? "..." : "Turn on"}
+                </button>
+              ))}
           </div>
           {notifPermission === "denied" && (
             <p className="text-xs text-inkfaint mt-2">

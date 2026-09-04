@@ -12,12 +12,12 @@ import {
   Trash2,
   Pencil,
   ExternalLink,
-  RefreshCw,
-  Link2,
+  X,
 } from "lucide-react";
 import EmptyState from "./EmptyState";
 import SongForm from "./SongForm";
 import { api } from "@/lib/api";
+import { getDriveEmbedUrl } from "@/lib/googleDrive";
 
 const LINK_BUTTONS = [
   ["lyrics_url", "Lyrics", FileText],
@@ -30,9 +30,10 @@ const LINK_BUTTONS = [
   ["full_mix_url", "Full Mix", Mic2],
 ];
 
-function SongRow({ song, isLeader, requestPin, onUpdated }) {
+function SongRow({ song, isLeader, onUpdated }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [activePreview, setActivePreview] = useState(null); // which link key is embedded open, if any
 
   const availableLinks = LINK_BUTTONS.filter(([key]) => song[key]);
 
@@ -45,6 +46,18 @@ function SongRow({ song, isLeader, requestPin, onUpdated }) {
   const remove = async () => {
     await api.deleteSong(song.id);
     onUpdated();
+  };
+
+  const tapLink = (key, url) => {
+    const embedUrl = getDriveEmbedUrl(url);
+    if (embedUrl) {
+      // Google Drive links play/preview right here in the app.
+      setActivePreview(activePreview === key ? null : key);
+    } else {
+      // Anything else just opens normally -- we can't guarantee in-app
+      // playback for an arbitrary link.
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
   };
 
   if (editing) {
@@ -64,20 +77,36 @@ function SongRow({ song, isLeader, requestPin, onUpdated }) {
         <div className="border-t border-linesoft px-4 py-3">
           {availableLinks.length > 0 ? (
             <div className="flex flex-wrap gap-2 mb-2">
-              {availableLinks.map(([key, label, Icon]) => (
-                <a
-                  key={key}
-                  href={song[key]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs bg-accent/8 text-accent rounded-full px-3 py-1.5"
-                >
-                  <Icon size={12} /> {label} <ExternalLink size={10} />
-                </a>
-              ))}
+              {availableLinks.map(([key, label, Icon]) => {
+                const embeddable = !!getDriveEmbedUrl(song[key]);
+                const active = activePreview === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => tapLink(key, song[key])}
+                    className={`inline-flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 ${
+                      active ? "bg-accent text-white" : "bg-accent/8 text-accent"
+                    }`}
+                  >
+                    <Icon size={12} /> {label} {embeddable ? (active ? <X size={10} /> : null) : <ExternalLink size={10} />}
+                  </button>
+                );
+              })}
             </div>
           ) : (
             <p className="text-xs text-inkfaint mb-2">Nothing linked yet for this song.</p>
+          )}
+
+          {activePreview && getDriveEmbedUrl(song[activePreview]) && (
+            <div className="mb-3 rounded-lg overflow-hidden border border-line">
+              <iframe
+                src={getDriveEmbedUrl(song[activePreview])}
+                className="w-full"
+                style={{ height: 160 }}
+                allow="autoplay"
+                title={`${song.title} - ${activePreview}`}
+              />
+            </div>
           )}
 
           {song.notes && <p className="text-sm text-inksoft mb-2">{song.notes}</p>}
@@ -101,89 +130,7 @@ function SongRow({ song, isLeader, requestPin, onUpdated }) {
   );
 }
 
-function SyncFromSpreadsheet({ onSynced }) {
-  const [showSettings, setShowSettings] = useState(false);
-  const [url, setUrl] = useState("");
-  const [savingUrl, setSavingUrl] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    api.getConfig().then((d) => setUrl(d.config?.song_spreadsheet_url || "")).catch(() => {});
-  }, []);
-
-  const saveUrl = async () => {
-    setSavingUrl(true);
-    try {
-      await api.setConfig("song_spreadsheet_url", url.trim());
-      setShowSettings(false);
-    } finally {
-      setSavingUrl(false);
-    }
-  };
-
-  const sync = async () => {
-    setSyncing(true);
-    setError("");
-    setResult(null);
-    try {
-      const d = await api.syncSongsFromSpreadsheet();
-      setResult(d);
-      if (d.count > 0) onSynced();
-    } catch (err) {
-      setError(err.message || "Sync failed.");
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  return (
-    <div className="sp-card mb-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-ink flex items-center gap-1.5">
-          <RefreshCw size={14} className="text-inkfaint" /> Spreadsheet Sync
-        </p>
-        <button onClick={() => setShowSettings((s) => !s)} className="text-inkfaint">
-          <Link2 size={14} />
-        </button>
-      </div>
-
-      {showSettings && (
-        <div className="mt-2.5 space-y-2">
-          <input
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="OneDrive share link to the spreadsheet"
-            className="sp-input text-xs"
-          />
-          <button onClick={saveUrl} disabled={savingUrl} className="sp-btn-secondary w-full text-xs py-1.5">
-            {savingUrl ? "Saving..." : "Save Link"}
-          </button>
-        </div>
-      )}
-
-      <button
-        onClick={sync}
-        disabled={syncing || !url}
-        className="sp-btn-primary w-full mt-2.5 text-sm py-2"
-      >
-        {syncing ? "Syncing..." : "Sync from Spreadsheet"}
-      </button>
-
-      {error && <p className="text-accent text-xs mt-2">{error}</p>}
-      {result && !error && (
-        <p className="text-xs text-sage mt-2">
-          {result.count === 0
-            ? "No new songs found — everything's already up to date."
-            : `Added ${result.count} new song${result.count === 1 ? "" : "s"}: ${result.added.join(", ")}`}
-        </p>
-      )}
-    </div>
-  );
-}
-
-export default function SongsTab({ isLeader, requestPin }) {
+export default function SongsTab({ isLeader }) {
   const [songs, setSongs] = useState(null);
   const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -215,12 +162,11 @@ export default function SongsTab({ isLeader, requestPin }) {
     <div className="px-5 pt-4 pb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-serif text-xl text-ink">Songs</h2>
-        <button
-          onClick={() => (isLeader ? setShowForm((s) => !s) : requestPin(() => setShowForm(true)))}
-          className="sp-btn-pill"
-        >
-          <Plus size={14} /> Add
-        </button>
+        {isLeader && (
+          <button onClick={() => setShowForm((s) => !s)} className="sp-btn-pill">
+            <Plus size={14} /> Add
+          </button>
+        )}
       </div>
 
       <div className="relative mb-4">
@@ -235,15 +181,13 @@ export default function SongsTab({ isLeader, requestPin }) {
 
       {showForm && <SongForm onCancel={() => setShowForm(false)} onSave={create} />}
 
-      {isLeader && <SyncFromSpreadsheet onSynced={load} />}
-
       {filtered.length === 0 && !showForm && (
         <EmptyState icon={Music} text={query ? "No songs match that search." : "No songs yet."} />
       )}
 
       <div className="space-y-2">
         {filtered.map((song) => (
-          <SongRow key={song.id} song={song} isLeader={isLeader} requestPin={requestPin} onUpdated={load} />
+          <SongRow key={song.id} song={song} isLeader={isLeader} onUpdated={load} />
         ))}
       </div>
 

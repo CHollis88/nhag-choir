@@ -17,8 +17,8 @@ module.exports = {
         linesoft: "rgb(var(--color-linesoft) / <alpha-value>)",
         accent: "rgb(var(--color-accent) / <alpha-value>)",
         sage: "rgb(var(--color-sage) / <alpha-value>)",
-        navy: "#16296B",
-        navydeep: "#0B1A3D",
+        navy: "#2171BA",
+        navydeep: "#0E2F4E",
       },
       fontFamily: {
         serif: ["'Source Serif 4'", "Georgia", "serif"],

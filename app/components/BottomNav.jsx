@@ -1,13 +1,14 @@
 "use client";
 
-import { Music, ListMusic, CalendarDays, Heart, Megaphone } from "lucide-react";
+import { Home, Heart, ListMusic, Megaphone, CalendarDays, Music } from "lucide-react";
 
 export const TABS = [
-  { id: "songs", label: "Songs", icon: Music },
-  { id: "setlists", label: "Setlists", icon: ListMusic },
-  { id: "events", label: "Events", icon: CalendarDays },
+  { id: "home", label: "Home", icon: Home },
   { id: "prayer", label: "Prayer", icon: Heart },
+  { id: "setlists", label: "Setlists", icon: ListMusic },
   { id: "news", label: "News", icon: Megaphone },
+  { id: "events", label: "Events", icon: CalendarDays },
+  { id: "songs", label: "Songs", icon: Music },
 ];
 
 export default function BottomNav({ tab, setTab }) {

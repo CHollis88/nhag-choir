@@ -3,7 +3,7 @@
 import { Lock } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
-export default function Header({ myName, onChangeName, isLeader, onRequestPin }) {
+export default function Header({ myName, onChangeName, isLeader, onRequestPin, onOpenRoster }) {
   return (
     <header
       className="sticky top-0 z-30 bg-paper/95 backdrop-blur border-b border-line px-5 pb-3 flex items-center justify-between"
@@ -28,9 +28,12 @@ export default function Header({ myName, onChangeName, isLeader, onRequestPin })
       <div className="flex items-center gap-3.5">
         <ThemeToggle />
         {isLeader ? (
-          <span className="text-xs bg-accent/10 text-accent rounded-full px-2.5 py-1 flex items-center gap-1">
+          <button
+            onClick={onOpenRoster}
+            className="text-xs bg-accent/10 text-accent rounded-full px-2.5 py-1 flex items-center gap-1"
+          >
             <Lock size={11} /> Leader
-          </span>
+          </button>
         ) : (
           <button onClick={onRequestPin} className="text-inkfaint" aria-label="Leader sign in">
             <Lock size={16} />

@@ -6,7 +6,9 @@ import NameGate from "./components/NameGate";
 import Header from "./components/Header";
 import BottomNav from "./components/BottomNav";
 import PinGate from "./components/PinGate";
+import RosterView from "./components/RosterView";
 import NotifyBanner, { shouldShowNotifyBanner } from "./components/NotifyBanner";
+import HomeTab from "./components/HomeTab";
 import SongsTab from "./components/SongsTab";
 import SetlistsTab from "./components/SetlistsTab";
 import EventsTab from "./components/EventsTab";
@@ -19,9 +21,10 @@ export default function Home() {
   const [showCover, setShowCover] = useState(true);
   const [deviceId, setDeviceId] = useState(null);
   const [myName, setMyName] = useState(null); // null = loading, "" = needs name
-  const [tab, setTab] = useState("songs");
+  const [tab, setTab] = useState("home");
   const [isLeader, setIsLeader] = useState(false);
   const [pinOpen, setPinOpen] = useState(false);
+  const [rosterOpen, setRosterOpen] = useState(false);
   const [showNotifyBanner, setShowNotifyBanner] = useState(false);
   const pinCallback = useRef(null);
 
@@ -89,7 +92,8 @@ export default function Home() {
         myName={myName}
         onChangeName={() => saveName("")}
         isLeader={isLeader}
-        onRequestPin={() => requestPin(() => {})}
+        onRequestPin={() => requestPin(() => setRosterOpen(true))}
+        onOpenRoster={() => setRosterOpen(true)}
       />
 
       {showNotifyBanner && (
@@ -97,6 +101,7 @@ export default function Home() {
       )}
 
       <main className="flex-1 max-w-lg w-full mx-auto">
+        {tab === "home" && <HomeTab setTab={setTab} />}
         {tab === "songs" && <SongsTab isLeader={isLeader} requestPin={requestPin} />}
         {tab === "setlists" && <SetlistsTab isLeader={isLeader} requestPin={requestPin} />}
         {tab === "events" && (
@@ -109,6 +114,7 @@ export default function Home() {
       <BottomNav tab={tab} setTab={setTab} />
 
       <PinGate open={pinOpen} onClose={() => setPinOpen(false)} onSuccess={handlePinSuccess} />
+      {rosterOpen && <RosterView onClose={() => setRosterOpen(false)} />}
     </div>
   );
 }

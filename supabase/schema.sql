@@ -35,7 +35,7 @@ create table if not exists songs (
 create table if not exists setlists (
   id uuid primary key default gen_random_uuid(),
   service_date date not null,
-  service text not null check (service in ('AM', 'PM')),
+  service text not null check (service in ('AM', 'PM', 'CP')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

@@ -62,6 +62,7 @@ export default function SetlistForm({ initial, allSongs, onCancel, onSave }) {
         <select value={service} onChange={(e) => setService(e.target.value)} className="sp-input">
           <option value="AM">AM Service</option>
           <option value="PM">PM Service</option>
+          <option value="CP">Choir Practice</option>
         </select>
       </div>
 

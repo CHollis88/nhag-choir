@@ -86,7 +86,7 @@ export default function SetlistsTab({ isLeader, requestPin }) {
           <div key={s.id} className="sp-card relative">
             <div className="flex items-center justify-between mb-2 pr-14">
               <p className="font-serif text-lg text-ink">{fmtDate(s.service_date)}</p>
-              <span className="text-[10px] uppercase tracking-wide bg-navy/10 text-navy rounded-full px-2 py-0.5 font-semibold">
+              <span className="text-[10px] uppercase tracking-wide bg-navy/10 text-navy dark:bg-blue-400/15 dark:text-blue-300 rounded-full px-2 py-0.5 font-semibold">
                 {s.service}
               </span>
             </div>

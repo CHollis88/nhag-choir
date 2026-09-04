@@ -70,13 +70,8 @@ export default function NewsTab({ isLeader, requestPin }) {
     load();
   };
 
-  const openAdd = () => {
-    const start = () => setShowForm(true);
-    isLeader ? start() : requestPin(start);
-  };
   const openEdit = (post) => {
-    const start = () => setEditing(post);
-    isLeader ? start() : requestPin(start);
+    setEditing(post);
   };
 
   if (posts === null) return null;
@@ -88,9 +83,11 @@ export default function NewsTab({ isLeader, requestPin }) {
     <div className="px-5 pt-4 pb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-serif text-xl text-ink">Announcements</h2>
-        <button onClick={openAdd} className="sp-btn-pill">
-          <Plus size={14} /> Post
-        </button>
+        {isLeader && (
+          <button onClick={() => setShowForm((s) => !s)} className="sp-btn-pill">
+            <Plus size={14} /> Post
+          </button>
+        )}
       </div>
 
       {showForm && <PostForm onCancel={() => setShowForm(false)} onSave={create} />}

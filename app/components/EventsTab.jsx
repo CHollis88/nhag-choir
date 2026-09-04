@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Plus, CalendarDays, Clock, MapPin, Trash2, Check, Pencil } from "lucide-react";
 import EmptyState from "./EmptyState";
 import { api } from "@/lib/api";
+import { fmtEventDate, fmtEventTime } from "@/lib/format";
 
 function EventForm({ initial, onCancel, onSave }) {
   const [title, setTitle] = useState(initial?.title || "");
@@ -116,8 +117,7 @@ export default function EventsTab({ deviceId, myName, isLeader, requestPin }) {
   };
 
   const openEdit = (event) => {
-    const start = () => setEditingEvent(event);
-    isLeader ? start() : requestPin(start);
+    setEditingEvent(event);
   };
 
   if (events === null) return null;
@@ -126,21 +126,15 @@ export default function EventsTab({ deviceId, myName, isLeader, requestPin }) {
   const upcoming = events.filter((e) => e.event_date >= today);
   const past = events.filter((e) => e.event_date < today);
 
-  const fmtDate = (d) => {
-    const dt = new Date(d + "T00:00:00");
-    return dt.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-  };
-
   return (
     <div className="px-5 pt-4 pb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-serif text-xl text-ink">Events</h2>
-        <button
-          onClick={() => (isLeader ? setShowForm((s) => !s) : requestPin(() => setShowForm(true)))}
-          className="sp-btn-pill"
-        >
-          <Plus size={14} /> Add
-        </button>
+        {isLeader && (
+          <button onClick={() => setShowForm((s) => !s)} className="sp-btn-pill">
+            <Plus size={14} /> Add
+          </button>
+        )}
       </div>
 
       {showForm && <EventForm onCancel={() => setShowForm(false)} onSave={save} />}
@@ -156,11 +150,11 @@ export default function EventsTab({ deviceId, myName, isLeader, requestPin }) {
             <p className="font-serif text-lg text-ink mb-1.5 pr-14">{e.title}</p>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-inksoft">
               <span className="flex items-center gap-1.5">
-                <CalendarDays size={13} /> {fmtDate(e.event_date)}
+                <CalendarDays size={13} /> {fmtEventDate(e.event_date)}
               </span>
               {e.event_time && (
                 <span className="flex items-center gap-1.5">
-                  <Clock size={13} /> {e.event_time}
+                  <Clock size={13} /> {fmtEventTime(e.event_time)}
                 </span>
               )}
               {e.location && (
@@ -192,7 +186,7 @@ export default function EventsTab({ deviceId, myName, isLeader, requestPin }) {
             {past.map((e) => (
               <div key={e.id} className="bg-paper border border-linesoft rounded-xl p-3.5 opacity-70">
                 <p className="font-serif text-base text-ink">{e.title}</p>
-                <p className="text-xs text-inkfaint">{fmtDate(e.event_date)}</p>
+                <p className="text-xs text-inkfaint">{fmtEventDate(e.event_date)}</p>
               </div>
             ))}
           </div>

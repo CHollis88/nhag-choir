@@ -28,11 +28,6 @@ const LINK_BUTTONS = [
   ["full_mix_url", "Full Mix", Mic2],
 ];
 
-function fmtDate(d) {
-  if (!d) return null;
-  return new Date(d + "T00:00:00").toLocaleDateString(undefined, { month: "short", year: "numeric" });
-}
-
 function SongRow({ song, isLeader, requestPin, onUpdated }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -61,11 +56,6 @@ function SongRow({ song, isLeader, requestPin, onUpdated }) {
           <p className="font-serif text-base text-ink truncate">{song.title}</p>
           {song.composer && <p className="text-xs text-inkfaint truncate">{song.composer}</p>}
         </div>
-        {song.times_sung ? (
-          <span className="text-[11px] text-inkfaint flex-shrink-0 ml-2">
-            Sung {song.times_sung}×
-          </span>
-        ) : null}
       </button>
 
       {open && (
@@ -89,14 +79,6 @@ function SongRow({ song, isLeader, requestPin, onUpdated }) {
           )}
 
           {song.notes && <p className="text-sm text-inksoft mb-2">{song.notes}</p>}
-
-          {(song.first_date || song.most_recent_date) && (
-            <p className="text-[11px] text-inkfaint mb-2">
-              {song.first_date && `First sung ${fmtDate(song.first_date)}`}
-              {song.first_date && song.most_recent_date && " · "}
-              {song.most_recent_date && `Last sung ${fmtDate(song.most_recent_date)}`}
-            </p>
-          )}
 
           {isLeader && (
             <div className="flex gap-3 pt-1">

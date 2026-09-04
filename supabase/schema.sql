@@ -5,7 +5,19 @@
 create table if not exists people (
   device_id text primary key,
   name text not null,
+  personal_pin text,
+  notifications_last_seen timestamptz,
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists people_name_pin_unique
+  on people (lower(name), personal_pin)
+  where personal_pin is not null;
+
+create table if not exists app_config (
+  key text primary key,
+  value text,
   updated_at timestamptz not null default now()
 );
 
@@ -117,3 +129,4 @@ alter table prayer_requests enable row level security;
 alter table prayer_prayed enable row level security;
 alter table announcements enable row level security;
 alter table push_subscriptions enable row level security;
+alter table app_config enable row level security;

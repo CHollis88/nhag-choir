@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Heart, Pencil, Trash2 } from "lucide-react";
 import EmptyState from "./EmptyState";
+import InfoTooltip from "./InfoTooltip";
 import { api } from "@/lib/api";
 
 const PRAYED_KEY = "sp_prayed_ids";
@@ -45,6 +46,7 @@ function EditForm({ request, onCancel, onSave }) {
           className="w-3.5 h-3.5"
         />
         Post anonymously
+        <InfoTooltip text="Your name won't be shown, but leaders can still remove abusive posts." />
       </label>
       <div className="flex gap-2">
         <button onClick={onCancel} className="sp-btn-secondary flex-1">
@@ -81,9 +83,10 @@ export default function PrayerTab({ deviceId, myName, isLeader }) {
   };
 
   const pray = async (id) => {
-    if (prayed[id]) return;
-    await api.prayFor(id, deviceId);
-    const next = { ...prayed, [id]: true };
+    const result = await api.prayFor(id, deviceId);
+    const next = { ...prayed };
+    if (result.praying) next[id] = true;
+    else delete next[id];
     setPrayed(next);
     setPrayedIds(next);
     load();
@@ -122,6 +125,7 @@ export default function PrayerTab({ deviceId, myName, isLeader }) {
             className="w-3.5 h-3.5"
           />
           Post anonymously
+          <InfoTooltip text="Your name won't be shown, but leaders can still remove abusive posts." />
         </label>
         <p className="text-xs text-inkfaint">
           {anonymous ? "Posting as Anonymous" : `Posting as ${myName || "you"}`}
@@ -155,7 +159,6 @@ export default function PrayerTab({ deviceId, myName, isLeader }) {
                 <span className="text-xs text-inkfaint">{r.name}</span>
                 <button
                   onClick={() => pray(r.id)}
-                  disabled={!!prayed[r.id]}
                   className={`sp-pill-outline ${prayed[r.id] ? "active" : ""}`}
                 >
                   <Heart size={12} fill={prayed[r.id] ? "rgb(var(--color-sage))" : "none"} />

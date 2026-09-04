@@ -12,6 +12,8 @@ import {
   Trash2,
   Pencil,
   ExternalLink,
+  RefreshCw,
+  Link2,
 } from "lucide-react";
 import EmptyState from "./EmptyState";
 import SongForm from "./SongForm";
@@ -99,6 +101,88 @@ function SongRow({ song, isLeader, requestPin, onUpdated }) {
   );
 }
 
+function SyncFromSpreadsheet({ onSynced }) {
+  const [showSettings, setShowSettings] = useState(false);
+  const [url, setUrl] = useState("");
+  const [savingUrl, setSavingUrl] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api.getConfig().then((d) => setUrl(d.config?.song_spreadsheet_url || "")).catch(() => {});
+  }, []);
+
+  const saveUrl = async () => {
+    setSavingUrl(true);
+    try {
+      await api.setConfig("song_spreadsheet_url", url.trim());
+      setShowSettings(false);
+    } finally {
+      setSavingUrl(false);
+    }
+  };
+
+  const sync = async () => {
+    setSyncing(true);
+    setError("");
+    setResult(null);
+    try {
+      const d = await api.syncSongsFromSpreadsheet();
+      setResult(d);
+      if (d.count > 0) onSynced();
+    } catch (err) {
+      setError(err.message || "Sync failed.");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  return (
+    <div className="sp-card mb-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-ink flex items-center gap-1.5">
+          <RefreshCw size={14} className="text-inkfaint" /> Spreadsheet Sync
+        </p>
+        <button onClick={() => setShowSettings((s) => !s)} className="text-inkfaint">
+          <Link2 size={14} />
+        </button>
+      </div>
+
+      {showSettings && (
+        <div className="mt-2.5 space-y-2">
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="OneDrive share link to the spreadsheet"
+            className="sp-input text-xs"
+          />
+          <button onClick={saveUrl} disabled={savingUrl} className="sp-btn-secondary w-full text-xs py-1.5">
+            {savingUrl ? "Saving..." : "Save Link"}
+          </button>
+        </div>
+      )}
+
+      <button
+        onClick={sync}
+        disabled={syncing || !url}
+        className="sp-btn-primary w-full mt-2.5 text-sm py-2"
+      >
+        {syncing ? "Syncing..." : "Sync from Spreadsheet"}
+      </button>
+
+      {error && <p className="text-accent text-xs mt-2">{error}</p>}
+      {result && !error && (
+        <p className="text-xs text-sage mt-2">
+          {result.count === 0
+            ? "No new songs found — everything's already up to date."
+            : `Added ${result.count} new song${result.count === 1 ? "" : "s"}: ${result.added.join(", ")}`}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function SongsTab({ isLeader, requestPin }) {
   const [songs, setSongs] = useState(null);
   const [query, setQuery] = useState("");
@@ -150,6 +234,8 @@ export default function SongsTab({ isLeader, requestPin }) {
       </div>
 
       {showForm && <SongForm onCancel={() => setShowForm(false)} onSave={create} />}
+
+      {isLeader && <SyncFromSpreadsheet onSynced={load} />}
 
       {filtered.length === 0 && !showForm && (
         <EmptyState icon={Music} text={query ? "No songs match that search." : "No songs yet."} />

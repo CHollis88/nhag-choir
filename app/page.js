@@ -7,6 +7,9 @@ import Header from "./components/Header";
 import BottomNav from "./components/BottomNav";
 import PinGate from "./components/PinGate";
 import RosterView from "./components/RosterView";
+import SettingsView from "./components/SettingsView";
+import NotificationsView from "./components/NotificationsView";
+import HelpView from "./components/HelpView";
 import NotifyBanner, { shouldShowNotifyBanner } from "./components/NotifyBanner";
 import HomeTab from "./components/HomeTab";
 import SongsTab from "./components/SongsTab";
@@ -14,7 +17,7 @@ import SetlistsTab from "./components/SetlistsTab";
 import EventsTab from "./components/EventsTab";
 import PrayerTab from "./components/PrayerTab";
 import NewsTab from "./components/NewsTab";
-import { getDeviceId, getStoredName, setStoredName, clearStoredName } from "@/lib/device";
+import { getDeviceId, adoptDeviceId, getStoredName, setStoredName, clearStoredName } from "@/lib/device";
 import { api } from "@/lib/api";
 
 export default function Home() {
@@ -25,6 +28,10 @@ export default function Home() {
   const [isLeader, setIsLeader] = useState(false);
   const [pinOpen, setPinOpen] = useState(false);
   const [rosterOpen, setRosterOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifyBanner, setShowNotifyBanner] = useState(false);
   const pinCallback = useRef(null);
 
@@ -37,8 +44,12 @@ export default function Home() {
   useEffect(() => {
     const id = getDeviceId();
     setDeviceId(id);
-    setMyName(getStoredName());
+    const storedName = getStoredName();
+    setMyName(storedName);
     api.leaderStatus().then((d) => setIsLeader(!!d.isLeader)).catch(() => {});
+    if (storedName) {
+      api.getNotifications(id).then((d) => setUnreadCount(d.unreadCount || 0)).catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -49,18 +60,28 @@ export default function Home() {
   }, [myName]);
 
   const saveName = useCallback(
-    async (name) => {
+    async (name, personalPin) => {
       if (!name) {
         clearStoredName();
         setMyName("");
         return;
       }
+      if (deviceId && personalPin) {
+        await api.savePerson(deviceId, name, personalPin);
+      }
       setStoredName(name);
       setMyName(name);
-      if (deviceId) await api.savePerson(deviceId, name);
     },
     [deviceId]
   );
+
+  const reconnectName = useCallback(async (name, personalPin) => {
+    const result = await api.reconnectPerson(name, personalPin);
+    adoptDeviceId(result.device_id);
+    setDeviceId(result.device_id);
+    setStoredName(result.name);
+    setMyName(result.name);
+  }, []);
 
   const requestPin = useCallback((cb) => {
     pinCallback.current = cb;
@@ -83,7 +104,7 @@ export default function Home() {
   if (myName === null || deviceId === null) return null;
 
   if (!myName) {
-    return <NameGate onSave={saveName} />;
+    return <NameGate onSave={saveName} onReconnect={reconnectName} />;
   }
 
   return (
@@ -92,8 +113,10 @@ export default function Home() {
         myName={myName}
         onChangeName={() => saveName("")}
         isLeader={isLeader}
-        onRequestPin={() => requestPin(() => setRosterOpen(true))}
-        onOpenRoster={() => setRosterOpen(true)}
+        onRequestPin={() => requestPin(() => {})}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenNotifications={() => setNotificationsOpen(true)}
+        unreadCount={unreadCount}
       />
 
       {showNotifyBanner && (
@@ -115,6 +138,32 @@ export default function Home() {
 
       <PinGate open={pinOpen} onClose={() => setPinOpen(false)} onSuccess={handlePinSuccess} />
       {rosterOpen && <RosterView onClose={() => setRosterOpen(false)} />}
+      {settingsOpen && (
+        <SettingsView
+          deviceId={deviceId}
+          myName={myName}
+          isLeader={isLeader}
+          onClose={() => setSettingsOpen(false)}
+          onOpenRoster={() => setRosterOpen(true)}
+          onOpenHelp={() => setHelpOpen(true)}
+          onLeaderSignOut={() => {
+            setIsLeader(false);
+            setSettingsOpen(false);
+          }}
+          rosterLabel="Who's Signed In"
+        />
+      )}
+      {notificationsOpen && (
+        <NotificationsView
+          deviceId={deviceId}
+          onClose={() => {
+            setNotificationsOpen(false);
+            setUnreadCount(0);
+          }}
+          setTab={setTab}
+        />
+      )}
+      {helpOpen && <HelpView onClose={() => setHelpOpen(false)} />}
     </div>
   );
 }

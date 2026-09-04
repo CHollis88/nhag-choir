@@ -6,26 +6,27 @@ export async function GET(req) {
   if (!isLeaderRequest(req)) {
     return NextResponse.json({ error: "Leader access required." }, { status: 403 });
   }
-
   const supabase = supabaseServer();
-  const { data, error } = await supabase
-    .from("people")
-    .select("device_id, name, personal_pin, created_at, updated_at")
-    .order("created_at", { ascending: true });
-
+  const { data, error } = await supabase.from("app_config").select("key, value");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ roster: data });
+
+  const config = {};
+  for (const row of data) config[row.key] = row.value;
+  return NextResponse.json({ config });
 }
 
-export async function DELETE(req) {
+export async function POST(req) {
   if (!isLeaderRequest(req)) {
     return NextResponse.json({ error: "Leader access required." }, { status: 403 });
   }
-  const deviceId = req.nextUrl.searchParams.get("device_id");
-  if (!deviceId) return NextResponse.json({ error: "device_id is required." }, { status: 400 });
+  const { key, value } = await req.json();
+  if (!key) return NextResponse.json({ error: "key is required." }, { status: 400 });
 
   const supabase = supabaseServer();
-  const { error } = await supabase.from("people").delete().eq("device_id", deviceId);
+  const { error } = await supabase
+    .from("app_config")
+    .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

@@ -1,9 +1,16 @@
 "use client";
 
-import { Lock } from "lucide-react";
-import ThemeToggle from "./ThemeToggle";
+import { Lock, Settings, Bell } from "lucide-react";
 
-export default function Header({ myName, onChangeName, isLeader, onRequestPin, onOpenRoster }) {
+export default function Header({
+  myName,
+  onChangeName,
+  isLeader,
+  onRequestPin,
+  onOpenSettings,
+  onOpenNotifications,
+  unreadCount = 0,
+}) {
   return (
     <header
       className="sticky top-0 z-30 bg-paper/95 backdrop-blur border-b border-line px-5 pb-3 flex items-center justify-between"
@@ -25,15 +32,22 @@ export default function Header({ myName, onChangeName, isLeader, onRequestPin, o
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-3.5">
-        <ThemeToggle />
+      <div className="flex items-center gap-4">
+        <button onClick={onOpenNotifications} className="relative text-inkfaint" aria-label="Notifications">
+          <Bell size={18} />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-accent text-white text-[9px] font-semibold rounded-full min-w-[15px] h-[15px] flex items-center justify-center px-1">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </button>
+        <button onClick={onOpenSettings} className="text-inkfaint" aria-label="Settings">
+          <Settings size={18} />
+        </button>
         {isLeader ? (
-          <button
-            onClick={onOpenRoster}
-            className="text-xs bg-accent/10 text-accent rounded-full px-2.5 py-1 flex items-center gap-1"
-          >
+          <span className="text-xs bg-accent/10 text-accent rounded-full px-2.5 py-1 flex items-center gap-1">
             <Lock size={11} /> Leader
-          </button>
+          </span>
         ) : (
           <button onClick={onRequestPin} className="text-inkfaint" aria-label="Leader sign in">
             <Lock size={16} />

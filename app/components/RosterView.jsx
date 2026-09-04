@@ -51,6 +51,11 @@ export default function RosterView({ onClose }) {
               <div key={person.device_id} className="sp-card relative pr-11">
                 <p className="font-serif text-base text-ink">{person.name}</p>
                 <p className="text-xs text-inkfaint">Joined {fmtJoined(person.created_at)}</p>
+                {person.personal_pin && (
+                  <p className="text-[11px] text-inkfaint">
+                    PIN: <span className="font-mono">{person.personal_pin}</span>
+                  </p>
+                )}
                 <button
                   onClick={() => remove(person.device_id)}
                   className="absolute top-4 right-3.5 text-inkfaint"

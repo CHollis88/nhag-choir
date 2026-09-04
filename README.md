@@ -72,6 +72,7 @@ be different from the Young Adults app's PIN.
    | `VAPID_PRIVATE_KEY` | from Step 3 |
    | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | from Step 3 |
    | `VAPID_SUBJECT` | `mailto:` + your email |
+   | `CRON_SECRET` | a random string (generate with `openssl rand -hex 32`) |
 
 3. **Important:** In the same setup screen, check that **Framework Preset**
    shows "Next.js" (not "Other") before deploying -- this tripped up the

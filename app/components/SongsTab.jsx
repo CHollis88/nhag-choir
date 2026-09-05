@@ -12,12 +12,10 @@ import {
   Trash2,
   Pencil,
   ExternalLink,
-  X,
 } from "lucide-react";
 import EmptyState from "./EmptyState";
 import SongForm from "./SongForm";
 import { api } from "@/lib/api";
-import { getDriveEmbedUrl } from "@/lib/googleDrive";
 
 const LINK_BUTTONS = [
   ["lyrics_url", "Lyrics", FileText],
@@ -33,7 +31,6 @@ const LINK_BUTTONS = [
 function SongRow({ song, isLeader, onUpdated }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [activePreview, setActivePreview] = useState(null); // which link key is embedded open, if any
 
   const availableLinks = LINK_BUTTONS.filter(([key]) => song[key]);
 
@@ -46,18 +43,6 @@ function SongRow({ song, isLeader, onUpdated }) {
   const remove = async () => {
     await api.deleteSong(song.id);
     onUpdated();
-  };
-
-  const tapLink = (key, url) => {
-    const embedUrl = getDriveEmbedUrl(url);
-    if (embedUrl) {
-      // Google Drive links play/preview right here in the app.
-      setActivePreview(activePreview === key ? null : key);
-    } else {
-      // Anything else just opens normally -- we can't guarantee in-app
-      // playback for an arbitrary link.
-      window.open(url, "_blank", "noopener,noreferrer");
-    }
   };
 
   if (editing) {
@@ -77,36 +62,20 @@ function SongRow({ song, isLeader, onUpdated }) {
         <div className="border-t border-linesoft px-4 py-3">
           {availableLinks.length > 0 ? (
             <div className="flex flex-wrap gap-2 mb-2">
-              {availableLinks.map(([key, label, Icon]) => {
-                const embeddable = !!getDriveEmbedUrl(song[key]);
-                const active = activePreview === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => tapLink(key, song[key])}
-                    className={`inline-flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 ${
-                      active ? "bg-accent text-white" : "bg-accent/8 text-accent"
-                    }`}
-                  >
-                    <Icon size={12} /> {label} {embeddable ? (active ? <X size={10} /> : null) : <ExternalLink size={10} />}
-                  </button>
-                );
-              })}
+              {availableLinks.map(([key, label, Icon]) => (
+                <a
+                  key={key}
+                  href={song[key]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs bg-accent/8 text-accent rounded-full px-3 py-1.5"
+                >
+                  <Icon size={12} /> {label} <ExternalLink size={10} />
+                </a>
+              ))}
             </div>
           ) : (
             <p className="text-xs text-inkfaint mb-2">Nothing linked yet for this song.</p>
-          )}
-
-          {activePreview && getDriveEmbedUrl(song[activePreview]) && (
-            <div className="mb-3 rounded-lg overflow-hidden border border-line">
-              <iframe
-                src={getDriveEmbedUrl(song[activePreview])}
-                className="w-full"
-                style={{ height: 160 }}
-                allow="autoplay"
-                title={`${song.title} - ${activePreview}`}
-              />
-            </div>
           )}
 
           {song.notes && <p className="text-sm text-inksoft mb-2">{song.notes}</p>}

@@ -5,6 +5,7 @@ import CoverScreen from "./components/CoverScreen";
 import NameGate from "./components/NameGate";
 import Header from "./components/Header";
 import BottomNav from "./components/BottomNav";
+import Sidebar from "./components/Sidebar";
 import PinGate from "./components/PinGate";
 import RosterView from "./components/RosterView";
 import SettingsView from "./components/SettingsView";
@@ -108,22 +109,24 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col">
-      <Header
-        myName={myName}
-        onChangeName={() => saveName("")}
-        isLeader={isLeader}
-        onRequestPin={() => requestPin(() => {})}
-        onOpenSettings={() => setSettingsOpen(true)}
-        onOpenNotifications={() => setNotificationsOpen(true)}
-        unreadCount={unreadCount}
-      />
+    <div className="min-h-screen bg-paper flex md:flex-row flex-col">
+      <Sidebar tab={tab} setTab={setTab} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header
+          myName={myName}
+          onChangeName={() => saveName("")}
+          isLeader={isLeader}
+          onRequestPin={() => requestPin(() => {})}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenNotifications={() => setNotificationsOpen(true)}
+          unreadCount={unreadCount}
+        />
 
-      {showNotifyBanner && (
-        <NotifyBanner deviceId={deviceId} onDone={() => setShowNotifyBanner(false)} />
-      )}
+        {showNotifyBanner && (
+          <NotifyBanner deviceId={deviceId} onDone={() => setShowNotifyBanner(false)} />
+        )}
 
-      <main className="flex-1 max-w-lg w-full mx-auto">
+        <main className="flex-1 w-full max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto md:mx-0 md:px-6">
         {tab === "home" && <HomeTab setTab={setTab} />}
         {tab === "songs" && <SongsTab isLeader={isLeader} requestPin={requestPin} />}
         {tab === "setlists" && <SetlistsTab isLeader={isLeader} requestPin={requestPin} />}
@@ -134,7 +137,8 @@ export default function Home() {
         {tab === "news" && <NewsTab isLeader={isLeader} requestPin={requestPin} />}
       </main>
 
-      <BottomNav tab={tab} setTab={setTab} />
+        <BottomNav tab={tab} setTab={setTab} />
+      </div>
 
       <PinGate open={pinOpen} onClose={() => setPinOpen(false)} onSuccess={handlePinSuccess} />
       {rosterOpen && <RosterView onClose={() => setRosterOpen(false)} />}

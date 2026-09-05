@@ -13,7 +13,7 @@ export const TABS = [
 
 export default function BottomNav({ tab, setTab }) {
   return (
-    <nav className="sticky bottom-0 z-30 bg-card border-t border-line px-2 pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+    <nav className="md:hidden sticky bottom-0 z-30 bg-card border-t border-line px-2 pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
       <div className="max-w-lg mx-auto flex justify-between">
         {TABS.map(({ id, label, icon: Icon }) => {
           const active = tab === id;
